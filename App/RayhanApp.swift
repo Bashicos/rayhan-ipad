@@ -262,8 +262,10 @@ struct PhoneShell: View {
         TabView(selection: $store.section) {
             ForEach(store.sections) { s in
                 Tab(s.label, systemImage: s.symbol, value: s) {
-                    SectionContent(section: s)
-                        .safeAreaInset(edge: .top, spacing: 0) { phoneTop }
+                    VStack(spacing: 0) {
+                        phoneTop
+                        SectionContent(section: s)
+                    }
                 }
             }
         }

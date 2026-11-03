@@ -171,7 +171,8 @@ enum DemoSeed {
 
         // ---------- today at reception (times around "now") ----------
         let nowMin = Day.minutes(now)
-        func tm(_ off: Int) -> String { Day.hm(min: max(0, min(23 * 60 + 45, (nowMin / 15) * 15 + off))) }
+        let anchor = min(max(nowMin, 11 * 60), 16 * 60) // keep the demo day inside clinic hours, even at night
+        func tm(_ off: Int) -> String { Day.hm(min: max(8 * 60, min(20 * 60, (anchor / 15) * 15 + off))) }
         var A: [Appointment] = []
         A.append(Appointment(id: "ap1", patient: "P2", day: T, time: tm(-150), dent: "d1", dur: 45, spec: "pros", tx: ["Cementation"]))
         A.append(Appointment(id: "ap2", patient: "P1", day: T, time: tm(-60), dent: "d2", dur: 60, spec: "endo", tx: ["Retreatment"], note: "Second visit"))

@@ -37,7 +37,7 @@ struct PatientProfileView: View {
                                     TeethInspector(p: p, sel: $selTooth).frame(width: 340)
                                 }
                             } else {
-                                DentalChartCard(p: p, sel: $selTooth)
+                                DentalChartCard(p: p, sel: $selTooth, narrow: hsc == .compact)
                                 TeethInspector(p: p, sel: $selTooth)
                             }
                             ProceduresSection(p: p)
@@ -93,7 +93,7 @@ struct PatientProfileView: View {
                 if wide { actions(p) }
             }
             if !wide { actions(p) }
-            HStack(alignment: .top, spacing: 12) {
+            (wide ? AnyLayout(HStackLayout(alignment: .top, spacing: 12)) : AnyLayout(VStackLayout(alignment: .leading, spacing: 12))) {
                 if !p.phones.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(p.phones, id: \.self) { ph in
@@ -105,9 +105,9 @@ struct PatientProfileView: View {
                         }
                     }
                 }
-                Spacer(minLength: 0)
+                if wide { Spacer(minLength: 0) }
                 if let next {
-                    VStack(alignment: .trailing, spacing: 3) {
+                    VStack(alignment: wide ? .trailing : .leading, spacing: 3) {
                         Text("Next appointment").font(.rx(11.5)).foregroundStyle(RX.ink4)
                         Text((next.day == store.today ? "Today" : Day.short(next.day)) + " · " + next.time).font(.rx(14, .semibold)).foregroundStyle(RX.mintLight)
                         Text(store.memberName(next.dent) + " · " + apLabel(next)).font(.rx(12)).foregroundStyle(RX.ink3).lineLimit(1)
@@ -154,10 +154,9 @@ struct PatientProfileView: View {
                 HStack { Icon(d: Ico.lab, size: 16).foregroundStyle(RX.tan); Text("Lab work").font(.rx(14, .semibold)) }
                 ForEach(cases) { r in
                     let w = Catalog.labWhere(r.lab?.steps.last?.k)
-                    HStack(spacing: 10) {
+                    FlowLayout(spacing: 10) {
                         Text(Catalog.typeName(r.type) + (r.teeth.isEmpty ? "" : " " + r.teeth.joined(separator: "·"))).font(.rx(13.5, .semibold))
                         Text(store.lab(r.lab?.lab)?.name ?? "").font(.rx(12)).foregroundStyle(RX.ink3)
-                        Spacer()
                         if let k = r.lab?.steps.last?.k { Text(Catalog.step(k)?.name ?? k).font(.rx(12)).foregroundStyle(Catalog.step(k)?.color ?? RX.ink3) }
                         Chip(text: w == .clinic ? "Here at the clinic · check it" : w.label, color: w.color, size: 11)
                     }

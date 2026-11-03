@@ -85,7 +85,7 @@ struct ReceptionView: View {
                     Text("\(it.0)").font(.rx(22, .bold)).foregroundStyle(it.2).contentTransition(.numericText())
                     Text(it.1).font(.rx(11.5)).foregroundStyle(RX.ink3)
                 }
-                .frame(minWidth: 84).padding(.vertical, 10).padding(.horizontal, 8)
+                .frame(minWidth: hsc == .compact ? 0 : 84, maxWidth: hsc == .compact ? .infinity : nil).padding(.vertical, 10).padding(.horizontal, 6)
                 .rxCard(16)
             }
         }
@@ -97,13 +97,12 @@ struct ReceptionView: View {
         let dents = store.dentists
         let cxToday = store.cancelled.filter { $0.day == store.today }.count
         return VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
+            FlowLayout(spacing: 10) {
                 Text("Coming today").font(.rx(15, .semibold))
                 Text("\(store.comingToday.count) still coming").font(.rx(12)).foregroundStyle(RX.ink3)
                 if cxToday > 0 {
                     Button("\(cxToday) cancelled today") { cancelled = true }.font(.rx(12, .bold)).foregroundStyle(RX.sand).underline().buttonStyle(.plain)
                 }
-                Spacer()
                 Button { cancelled = true } label: { Label("Cancelled · \(store.cancelled.count)", systemImage: "calendar.badge.minus") }
                     .font(.rx(12, .bold)).foregroundStyle(RX.sand).buttonStyle(.plain)
                     .padding(.horizontal, 11).padding(.vertical, 6).background(Capsule().strokeBorder(RX.sand.opacity(0.3)))

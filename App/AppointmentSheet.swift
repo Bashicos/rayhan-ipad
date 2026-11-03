@@ -402,9 +402,9 @@ struct CancelledSheet: View {
             if !X.reason.isEmpty {
                 Text("“\(X.reason)”").font(.rx(13.5)).padding(.horizontal, 12).padding(.vertical, 9).frame(maxWidth: .infinity, alignment: .leading).rxPanel(12, RX.deep)
             }
-            HStack(spacing: 8) {
+            FlowLayout(spacing: 8) {
                 Text("Marked \(Day.dm(X.at)) \(Day.hm(X.at))" + (X.who.map { " by " + store.memberName($0) } ?? "") + (X.reason.isEmpty ? " · no reason written" : "")).font(.rx(11.5)).foregroundStyle(RX.ink4)
-                Spacer()
+                
                 if let ph = p?.phone, !ph.isEmpty {
                     Button { openWhatsApp(ph, "Hello \(p?.first ?? ""), this is Rayhan Clinics. Your appointment on \(Day.short(c.day)) at \(c.time) was cancelled. Would you like to book a new time?") } label: { Label("WhatsApp", systemImage: "message.fill") }
                         .buttonStyle(SoftButton(compact: true, tint: Color(rgb: 0x7FE3A6), fill: RX.whatsapp.opacity(0.14)))

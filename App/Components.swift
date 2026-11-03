@@ -35,6 +35,7 @@ struct MintButton: ButtonStyle {
     var compact = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .lineLimit(1)
             .font(.rx(compact ? 13 : 15, .bold)).foregroundStyle(RX.onMint)
             .padding(.horizontal, compact ? 13 : 18).padding(.vertical, compact ? 9 : 12)
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(RX.mint))
@@ -50,6 +51,7 @@ struct SoftButton: ButtonStyle {
     var fill: Color = RX.card2
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .lineLimit(1)
             .font(.rx(compact ? 13 : 15, .semibold)).foregroundStyle(tint)
             .padding(.horizontal, compact ? 12 : 16).padding(.vertical, compact ? 8 : 12)
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(fill))
@@ -252,7 +254,7 @@ struct SheetHeader: View {
                     .buttonStyle(.plain).disabled(!primaryOn)
             } else { Color.clear.frame(width: 60, height: 1) }
         }
-        .padding(.horizontal, 22).padding(.vertical, 16)
+        .padding(.leading, 22).padding(.trailing, 58).padding(.vertical, 16)
         .overlay(alignment: .bottom) { Rectangle().fill(RX.line).frame(height: 1) }
     }
 }

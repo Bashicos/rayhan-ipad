@@ -87,7 +87,7 @@ struct LabsView: View {
                 }
                 if !last.note.isEmpty { Text("“\(last.note)”").font(.rx(12.5)).foregroundStyle(RX.ink2).padding(8).frame(maxWidth: .infinity, alignment: .leading).rxPanel(10, RX.deep) }
             }
-            HStack(spacing: 8) {
+            FlowLayout(spacing: 8) {
                 Button("Edit procedure") { edit = c }.buttonStyle(SoftButton(compact: true))
                 if c.whereNow == .lab {
                     Button("Try-in arrived") { store.addLabStep(c.pid, r.id, "tryin") }.buttonStyle(SoftButton(compact: true, tint: RX.lilac, fill: RX.lilac.opacity(0.14)))
@@ -96,7 +96,6 @@ struct LabsView: View {
                 if c.whereNow == .clinic {
                     Button("Delivered · done") { store.addLabStep(c.pid, r.id, "done") }.buttonStyle(MintButton(compact: true))
                 }
-                Spacer()
                 if let ph = lab?.phone { Button { openWhatsApp(ph, "") } label: { Icon(d: Ico.whatsapp, size: 16).foregroundStyle(RX.whatsapp) }.buttonStyle(.plain).frame(width: 38, height: 38).background(Circle().fill(RX.whatsapp.opacity(0.12))) }
             }
         }

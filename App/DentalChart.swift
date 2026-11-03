@@ -4,23 +4,31 @@ struct DentalChartCard: View {
     @Environment(Store.self) private var store
     let p: Patient
     @Binding var sel: String?
+    var narrow = false
     var body: some View {
         let M = store.marks(p)
         VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                SectionTitle(text: "Dental chart", sub: "Tap a tooth")
-                Spacer()
-                legend
+            ViewThatFits(in: .horizontal) {
+                HStack { SectionTitle(text: "Dental chart", sub: "Tap a tooth"); Spacer(); legend }
+                VStack(alignment: .leading, spacing: 8) { SectionTitle(text: "Dental chart", sub: "Tap a tooth"); legend }
             }
-            VStack(spacing: 6) {
-                jaw(Catalog.upper, upper: true, M)
-                Rectangle().fill(RX.line2).frame(height: 1).padding(.horizontal, 6)
-                jaw(Catalog.lower, upper: false, M)
+            if narrow {
+                ScrollView(.horizontal, showsIndicators: false) { chart(M).frame(width: 16 * 42) }
+            } else {
+                chart(M)
             }
-            .padding(.vertical, 6)
         }
         .padding(16)
         .rxCard(22)
+    }
+
+    private func chart(_ M: [String: (flags: Set<Catalog.Flag>, surf: [String])]) -> some View {
+        VStack(spacing: 6) {
+            jaw(Catalog.upper, upper: true, M)
+            Rectangle().fill(RX.line2).frame(height: 1).padding(.horizontal, 6)
+            jaw(Catalog.lower, upper: false, M)
+        }
+        .padding(.vertical, 6)
     }
 
     private var legend: some View {
