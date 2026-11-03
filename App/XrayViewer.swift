@@ -130,7 +130,7 @@ struct XrayViewer: View {
                 .glassEffect(.regular.interactive(), in: .capsule)
             VStack(alignment: .leading, spacing: 1) {
                 Text(p?.name ?? "").font(.rx(15, .semibold))
-                if let x { Text((x.teeth.isEmpty ? "" : "Teeth " + x.teeth.joined(separator: " · ") + " · ") + Day.dmy(x.takenAt) + " · " + store.memberName(x.by)).font(.rx(12)).foregroundStyle(RX.ink3) }
+                if let x { Text(xLine(x)).font(.rx(12)).foregroundStyle(RX.ink3) }
             }
             .padding(.horizontal, 14).padding(.vertical, 6)
             .glassEffect(.regular, in: .capsule)
@@ -193,6 +193,11 @@ struct XrayViewer: View {
             Text(hint).font(.rx(12)).foregroundStyle(RX.ink3)
         }
         .padding(.bottom, 14).padding(.horizontal, 12)
+    }
+
+    private func xLine(_ x: Xray) -> String {
+        let teeth: String = x.teeth.isEmpty ? "" : "Teeth \(x.teeth.joined(separator: " · ")) · "
+        return "\(teeth)\(Day.dmy(x.takenAt)) · \(store.memberName(x.by))"
     }
 
     private var hint: String {

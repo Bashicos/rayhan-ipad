@@ -233,7 +233,7 @@ struct LabPanel: View {
                         let def = Catalog.step(s.k)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(def?.name ?? s.k).font(.rx(12, .semibold)).foregroundStyle(def?.color ?? RX.ink)
-                            Text(Day.dm(s.at) + " " + Day.hm(s.at) + (s.by.map { " · " + store.memberName($0) } ?? "")).font(.rx(10.5)).foregroundStyle(RX.ink4)
+                            Text(stepLine(s)).font(.rx(10.5)).foregroundStyle(RX.ink4)
                             if !s.note.isEmpty { Text("“\(s.note)”").font(.rx(11)).foregroundStyle(RX.ink2).lineLimit(2) }
                         }
                         .padding(.horizontal, 10).padding(.vertical, 7)
@@ -276,6 +276,11 @@ struct LabPanel: View {
             Button("Save") { if let k = noteStep { store.addLabStep(pid, r.id, k, note: noteText) }; noteStep = nil }
             Button("Cancel", role: .cancel) { noteStep = nil }
         } message: { Text("Write what the modification or problem is") }
+    }
+
+    private func stepLine(_ s: LabStep) -> String {
+        let who: String = s.by.map { " · \(store.memberName($0))" } ?? ""
+        return "\(Day.dm(s.at)) \(Day.hm(s.at))\(who)"
     }
 
     private func labMenu(_ L: LabWork) -> some View {

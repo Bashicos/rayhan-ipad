@@ -621,7 +621,7 @@ struct LabPayments: View {
                     Image(systemName: "checkmark").font(.system(size: 12, weight: .bold)).foregroundStyle(RX.mintLight).frame(width: 28, height: 28).background(RoundedRectangle(cornerRadius: 9).fill(RX.mint.opacity(0.16)))
                     VStack(alignment: .leading, spacing: 1) {
                         Text(Money.fmt(p.amount, p.cur)).font(.rx(14, .bold))
-                        Text(Day.dmy(p.at) + " · " + p.method + " · " + store.memberName(p.by) + (p.note.isEmpty ? "" : " · " + p.note)).font(.rx(11)).foregroundStyle(RX.ink3).lineLimit(1)
+                        Text(labPayLine(p)).font(.rx(11)).foregroundStyle(RX.ink3).lineLimit(1)
                     }
                     Spacer()
                     Button { store.change("Payment removed") { $0.labPays.removeAll { $0.id == p.id } } } label: { Image(systemName: "xmark").font(.system(size: 11, weight: .bold)).foregroundStyle(RX.ink4) }.buttonStyle(.plain).frame(width: 32, height: 32)
@@ -631,5 +631,12 @@ struct LabPayments: View {
             if S.pays.isEmpty { Text("Nothing paid to this lab yet.").font(.rx(12.5)).foregroundStyle(RX.ink4) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+extension LabPayments {
+    func labPayLine(_ p: LabPayment) -> String {
+        let note: String = p.note.isEmpty ? "" : " · \(p.note)"
+        return "\(Day.dmy(p.at)) · \(p.method) · \(store.memberName(p.by))\(note)"
     }
 }
