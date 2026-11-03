@@ -1,0 +1,20 @@
+workflows:
+  ipad:
+    name: Rayhan iPad app
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+    environment:
+      xcode: latest
+      groups:
+        - github
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+    scripts:
+      - name: Build IPA and screenshots
+        script: ./ci/build.sh
+    artifacts:
+      - Rayhan.ipa
+      - shots.zip
