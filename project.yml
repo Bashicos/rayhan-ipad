@@ -1,0 +1,55 @@
+name: Rayhan
+options:
+  bundleIdPrefix: com.rayhanclinics
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGNING_ALLOWED: "NO"
+    ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+    SWIFT_STRICT_CONCURRENCY: minimal
+targets:
+  Rayhan:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      - path: Shared
+      - path: Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rayhanclinics.xray
+        PRODUCT_NAME: Rayhan
+        TARGETED_DEVICE_FAMILY: "1,2"
+        INFOPLIST_FILE: App/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: App/Rayhan.entitlements
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: "NO"
+    dependencies:
+      - target: RayhanWidgets
+        embed: true
+  RayhanWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rayhanclinics.xray.widgets
+        PRODUCT_NAME: RayhanWidgets
+        TARGETED_DEVICE_FAMILY: "1,2"
+        INFOPLIST_FILE: Widgets/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Widgets/RayhanWidgets.entitlements
+        SKIP_INSTALL: "YES"
+schemes:
+  Rayhan:
+    build:
+      targets:
+        Rayhan: all
+        RayhanWidgets: all

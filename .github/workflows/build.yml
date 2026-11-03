@@ -1,0 +1,81 @@
+name: Build iPad app
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: build
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode
+        run: |
+          ls /Applications | grep -i xcode || true
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1); [ -n "$X" ] && sudo xcode-select -s "$X"
+          xcodebuild -version
+      - name: Generate project
+        run: |
+          brew install xcodegen >/dev/null
+          xcodegen generate
+      - name: Build for iPad and iPhone (unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild -project Rayhan.xcodeproj -scheme Rayhan -configuration Release -sdk iphoneos \
+            -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 | tee build.log | xcbeautify --quiet || (grep -E "error:" build.log | sort -u | head -80; exit 1)
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/Rayhan.app Payload/
+          zip -qry Rayhan.ipa Payload
+          ls -la Rayhan.ipa
+      - name: Simulator build
+        run: |
+          set -o pipefail
+          xcodebuild -project Rayhan.xcodeproj -scheme Rayhan -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath simbuild \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | tee simbuild.log | xcbeautify --quiet
+      - name: Screenshots
+        run: |
+          APP=simbuild/Build/Products/Debug-iphonesimulator/Rayhan.app
+          mkdir -p shots
+          pick() { xcrun simctl list devices available | grep -E "$1" | head -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/'; }
+          IPAD=$(pick "iPad Pro 13|iPad Pro \(12.9|iPad Air 13|iPad"); IPHONE=$(pick "iPhone 17 Pro \(|iPhone 1[6-9] Pro \(|iPhone")
+          echo "iPad $IPAD iPhone $IPHONE"
+          shoot() { DEV=$1; NAME=$2; shift 2
+            xcrun simctl terminate $DEV com.rayhanclinics.xray >/dev/null 2>&1 || true
+            xcrun simctl launch $DEV com.rayhanclinics.xray "$@" >/dev/null
+            sleep 7; xcrun simctl io $DEV screenshot shots/$NAME.png >/dev/null 2>&1; }
+          for DEV in $IPAD $IPHONE; do
+            xcrun simctl boot $DEV || true; xcrun simctl bootstatus $DEV -b >/dev/null
+            xcrun simctl status_bar $DEV override --time "9:41" --batteryState charged --batteryLevel 100 || true
+            xcrun simctl install $DEV $APP
+          done
+          for S in signin reception calendar calweek calmonth patients profile chart xray labs labcase payments paybal paylate paylabs appointment cancel newpatient; do
+            shoot $IPAD ipad_$S -demoScreen $S -demoLandscape YES
+          done
+          for S in reception profile; do shoot $IPAD ipadP_$S -demoScreen $S; done
+          for S in signin reception calendar patients profile labs payments; do shoot $IPHONE iphone_$S -demoScreen $S; done
+          ls shots
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: |
+            build.log
+            simbuild.log
+          if-no-files-found: ignore
+      - name: Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          zip -qr screenshots.zip shots
+          TAG=build-${{ github.run_number }}
+          gh release create $TAG Rayhan.ipa screenshots.zip --title "Rayhan iPad app · build ${{ github.run_number }}" --notes "Unsigned IPA for Sideloadly (sign with your Apple ID). Commit ${{ github.sha }}" --latest

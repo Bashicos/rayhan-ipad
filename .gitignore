@@ -1,0 +1,6 @@
+build/
+simbuild/
+*.xcodeproj/
+Payload/
+*.ipa
+shots/
