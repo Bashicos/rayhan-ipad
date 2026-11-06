@@ -39,6 +39,11 @@ struct Bill {
     var labT: Double
     var discRaw: Double
     var agreed: Double?
+    var aSub: Double = 0
+    var agreedN = 0
+    var newN = 0
+    var untyped = 0
+    var unpriced = 0
     var total: Double
     var pays: [Payment]
     var paid: Double
@@ -75,10 +80,22 @@ enum BillEngine {
         var charged = rows.filter { $0.proc.status != .plan }.sorted { $0.day < $1.day }
         let planned = rows.filter { $0.proc.status == .plan }
         let subT = charged.reduce(0) { $0 + $1.sub }, planT = planned.reduce(0) { $0 + $1.sub }
-        let discRaw = min(subT, B.discKind == .pct ? subT * B.discValue / 100 : B.discValue)
-        let total = B.agreed.map { max(0, $0) } ?? (subT - discRaw)
-        let factor = subT > 0 ? total / subT : 0
-        for i in charged.indices { charged[i].net = charged[i].sub * factor; charged[i].left = charged[i].net }
+        let discRaw = max(0, min(subT, B.discKind == .pct ? subT * min(100, max(0, B.discValue)) / 100 : max(0, B.discValue)))
+        // a total set by hand covers the procedures it was set for; work added afterwards is charged at its own price
+        func inAgreed(_ x: BillRow) -> Bool { B.agreedIds.map { $0.contains(x.id) } ?? true }
+        let aSub = B.agreed == nil ? 0 : charged.filter(inAgreed).reduce(0) { $0 + $1.sub }
+        let agreed: Double? = (B.agreed != nil && aSub > 0) ? max(0, B.agreed!) : nil
+        var total = 0.0, agreedN = 0, newN = 0
+        if let ag = agreed {
+            let fA = ag / aSub
+            for i in charged.indices { if inAgreed(charged[i]) { charged[i].net = charged[i].sub * fA; agreedN += 1 } else { charged[i].net = charged[i].sub; newN += 1 } }
+            total = ag + charged.filter { !inAgreed($0) }.reduce(0) { $0 + $1.sub }
+        } else {
+            total = subT - discRaw
+            let f = subT > 0 ? total / subT : 0
+            for i in charged.indices { charged[i].net = charged[i].sub * f }
+        }
+        for i in charged.indices { charged[i].left = charged[i].net }
         let pays = B.pays.sorted { $0.at < $1.at }
         var credit = 0.0
         for py in pays {
@@ -95,6 +112,9 @@ enum BillEngine {
         let paid = pays.reduce(0) { $0 + fx.conv($1.amount, $1.cur, base, rateFrom: $1.rate) }
         // keep row states on the full list too
         for i in rows.indices { if let c = charged.first(where: { $0.id == rows[i].id }) { rows[i] = c } }
-        return Bill(rows: rows, charged: charged, planned: planned, subT: subT, planT: planT, rowDiscT: charged.reduce(0) { $0 + $1.rowDisc }, labT: charged.reduce(0) { $0 + $1.labCost }, discRaw: discRaw, agreed: B.agreed, total: total, pays: pays, paid: paid, credit: credit, gifts: rows.reduce(0) { $0 + $1.giftValue })
+        return Bill(rows: rows, charged: charged, planned: planned, subT: subT, planT: planT, rowDiscT: charged.reduce(0) { $0 + $1.rowDisc }, labT: charged.reduce(0) { $0 + $1.labCost }, discRaw: discRaw, agreed: agreed, aSub: aSub, agreedN: agreedN, newN: newN,
+                    untyped: p.procs.filter { Catalog.type($0.type) == nil && $0.status != .plan }.count,
+                    unpriced: charged.filter { !$0.gift && $0.base <= 0 && $0.adds.allSatisfy { $0.gift || $0.price <= 0 } }.count,
+                    total: total, pays: pays, paid: paid, credit: credit, gifts: rows.reduce(0) { $0 + $1.giftValue })
     }
 }

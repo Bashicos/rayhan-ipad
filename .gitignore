@@ -4,3 +4,4 @@ simbuild/
 Payload/
 *.ipa
 shots/
+__pycache__/

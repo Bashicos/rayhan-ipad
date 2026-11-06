@@ -35,13 +35,23 @@ final class Store {
     static let fileURL: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("rayhan-clinic.json")
 
     init() {
+        var loaded: ClinicData
         if let data = try? Data(contentsOf: Store.fileURL), let c = try? JSONDecoder.rx.decode(ClinicData.self, from: data) {
-            d = c
+            loaded = c
         } else {
-            d = DemoSeed.make()
+            loaded = DemoSeed.make()
         }
+        Store.fixAgreed(&loaded)
+        d = loaded
         me = UserDefaults.standard.string(forKey: "me")
         if let s = UserDefaults.standard.string(forKey: "demoScreen") { applyDemoScreen(s) }
+    }
+
+    /// older bills with a total set by hand: that total covers the procedures that were there; anything added later is charged on top
+    static func fixAgreed(_ d: inout ClinicData) {
+        for i in d.patients.indices where d.patients[i].billing.agreed != nil && d.patients[i].billing.agreedIds == nil {
+            d.patients[i].billing.agreedIds = d.patients[i].procs.filter { $0.status != .plan && Catalog.type($0.type) != nil }.map(\.id)
+        }
     }
 
     // MARK: persistence
@@ -58,7 +68,7 @@ final class Store {
     }
 
     func resetDemo() {
-        d = DemoSeed.make()
+        var fresh = DemoSeed.make(); Store.fixAgreed(&fresh); d = fresh
         undoStack.removeAll()
         flash("Demo data reset", undo: false)
     }

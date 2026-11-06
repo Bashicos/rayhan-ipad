@@ -26,6 +26,11 @@ struct ProfilePayments: View {
 
     private func summary(_ B: Bill) -> some View {
         VStack(alignment: .leading, spacing: 14) {
+            if B.untyped > 0 || B.unpriced > 0 {
+                Label([B.untyped > 0 ? "\(B.untyped) procedure\(B.untyped == 1 ? " has" : "s have") no treatment chosen, so not charged yet" : nil, B.unpriced > 0 ? "\(B.unpriced) procedure\(B.unpriced == 1 ? " has" : "s have") no price" : nil].compactMap { $0 }.joined(separator: " · "), systemImage: "exclamationmark.triangle")
+                    .font(.rx(12.5, .semibold)).foregroundStyle(RX.sand).padding(10).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(RX.sand.opacity(0.12)))
+            }
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Still to pay").font(.rx(12.5)).foregroundStyle(RX.ink3)
@@ -36,6 +41,7 @@ struct ProfilePayments: View {
                 VStack(alignment: .trailing, spacing: 6) {
                     kv("Total", store.money(B.total), strike: B.agreed != nil ? store.money(B.subT) : nil)
                     kv("Paid", store.money(B.paid))
+                    if B.agreed != nil && B.newN > 0 { Text("Your total covers \(B.agreedN) · \(B.newN) added later charged on top").font(.rx(11)).foregroundStyle(RX.sand) }
                     if B.labT > 0 { kv("Lab costs", "−" + store.money(B.labT)) }
                     if B.gifts > 0 { kv("Gifts 🎁", store.money(B.gifts)) }
                 }
@@ -76,10 +82,12 @@ struct ProfilePayments: View {
         HStack(spacing: 6) {
             Text("Total by hand").font(.rx(12)).foregroundStyle(RX.ink3)
             NumberBox(value: p.billing.agreed, width: 84, placeholder: "—") { v in
-                store.priceChange(p.id, key: "agreed", kind: "total", what: "Total set by hand", from: p.billing.agreed ?? 0, to: v) { $0.billing.agreed = v }
+                let ids = store.bill(p).charged.map(\.id)
+                if v != nil && ids.isEmpty { store.flash("Add a procedure first, then you can change the total", undo: false); return }
+                store.priceChange(p.id, key: "agreed", kind: "total", what: "Total set by hand", from: p.billing.agreed ?? 0, to: v) { $0.billing.agreed = v; $0.billing.agreedIds = v == nil ? nil : ids }
             }
             if p.billing.agreed != nil {
-                Button { store.updatePatient(p.id, "Back to the worked-out total") { $0.billing.agreed = nil } } label: { Image(systemName: "arrow.uturn.backward").foregroundStyle(RX.ink3) }.buttonStyle(.plain).frame(width: 30, height: 30)
+                Button { store.updatePatient(p.id, "Back to the worked-out total") { $0.billing.agreed = nil; $0.billing.agreedIds = nil } } label: { Image(systemName: "arrow.uturn.backward").foregroundStyle(RX.ink3) }.buttonStyle(.plain).frame(width: 30, height: 30)
             }
         }
     }

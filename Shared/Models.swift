@@ -149,6 +149,8 @@ struct Billing: Codable, Hashable {
     var discKind: DiscKind = .pct
     var discValue: Double = 0
     var agreed: Double?
+    /// the procedures a hand-set total covers; anything added later is charged on top
+    var agreedIds: [String]?
     var decider: String?
     var pays: [Payment] = []
     var changes: [PriceChange] = []
